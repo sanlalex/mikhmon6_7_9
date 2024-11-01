@@ -12,12 +12,10 @@ services:
     environment:
       APACHE_RUN_USER: www-data
       APACHE_RUN_GROUP: www-data
-    command: ["apache2-foreground"]
+    command: ["/bin/sh", "-c", "mkdir -p /etc/apache2/sites-available && cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.bak && apache2-foreground"]
     working_dir: /var/www/html
     restart: always
 
-    # Utiliser le Dockerfile pour l'installation des extensions et la configuration d'Apache
     build:
       context: .
       dockerfile: Dockerfile
-
