@@ -8,6 +8,7 @@ COPY . /var/www/html/
 
 # Configurer Apache
 RUN a2enmod rewrite
+RUN mkdir -p /etc/apache2/sites-available
 COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Définir les permissions
