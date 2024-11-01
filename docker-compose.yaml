@@ -6,8 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: php-apache-app
-    ports:
-      - "80"
     volumes:
       - ./:/var/www/html
 
