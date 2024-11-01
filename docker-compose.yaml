@@ -15,7 +15,6 @@ services:
     command: ["/bin/sh", "-c", "mkdir -p /etc/apache2/sites-available && cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.bak && apache2-foreground"]
     working_dir: /var/www/html
     restart: always
-
     build:
       context: .
       dockerfile: Dockerfile
