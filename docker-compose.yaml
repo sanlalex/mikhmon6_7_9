@@ -2,19 +2,18 @@ version: '3.8'
 
 services:
   web:
-    image: php:7.4-apache
-    container_name: php_apache_server
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-apache-app
     ports:
       - "81:80"
     volumes:
-      - /home/data:/var/www/html
+      - ./:/var/www/html
       - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
-    environment:
-      APACHE_RUN_USER: www-data
-      APACHE_RUN_GROUP: www-data
-    command: ["/bin/sh", "-c", "mkdir -p /etc/apache2/sites-available && cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.bak && apache2-foreground"]
-    working_dir: /var/www/html
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
