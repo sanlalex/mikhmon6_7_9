@@ -2,12 +2,22 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    image: php:7.4-apache
+    container_name: php_apache_server
     ports:
       - "80:80"
     volumes:
-      - ./data:/var/www/html  
+      - /home/data:/var/www/html
+      - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
     environment:
-      - APACHE_RUN_USER=www-data
-      - APACHE_RUN_GROUP=www-data
-    command: bash -c "mkdir -p /var/www/html && cp -r /var/www/html/* /data && apache2-foreground"
+      APACHE_RUN_USER: www-data
+      APACHE_RUN_GROUP: www-data
+    command: ["apache2-foreground"]
+    working_dir: /var/www/html
+    restart: always
+
+    # Utiliser le Dockerfile pour l'installation des extensions et la configuration d'Apache
+    build:
+      context: .
+      dockerfile: Dockerfile
+

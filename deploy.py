@@ -8,7 +8,7 @@ import sys
 
 # Configuration
 USER = "sanlalex"
-REPO = "mikhmon7_10_7_15"
+REPO = "mikhmon6_7_9"
 BRANCH = "dev" #dev
 GITHUB_TOKEN = "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"  
 
@@ -19,7 +19,7 @@ def main():
 
     # Enlever tous les points du nom de domaine
     domain = domain_name.replace('.', '')
-    directory_folder = "/home/mikhmononline"+ domain
+    directory_folder = "/home/mikhmononline/"+ domain
     # Créer le répertoire si nécessaire
     if not os.path.exists(directory_folder):
         os.makedirs(directory_folder)
@@ -44,7 +44,7 @@ def main():
     create_dockerfile(working_directory)
 
     # Création du docker-compose.yml
-    #create_docker_compose(domain, port, working_directory, external_db_url)
+    create_docker_compose(working_directory)
 
     # Build et lancement des conteneurs Docker
     print("\033[92m" + "Construction et lancement des conteneurs Docker..." + "\033[0m")
@@ -53,14 +53,6 @@ def main():
     except subprocess.CalledProcessError as e:
         print(f"Erreur lors du lancement des conteneurs Docker : {e}")
         return
-
-    # Configure Nginx
-    #configure_nginx(domain_name, working_directory, port)
-
-    # Install SSL certificates
-    #install_ssl(domain_name)
-
-    print("Déploiement Docker terminé avec succès!")
 
 def create_dockerfile(working_directory):
     dockerfile_content = """
@@ -80,87 +72,44 @@ COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
 
-EXPOSE 80
+EXPOSE 802
 
 CMD ["apache2-foreground"]
+
 """
+
     with open(f"{working_directory}/Dockerfile", "w") as f:
         f.write(dockerfile_content)
 
-def create_docker_compose(domain, port, working_directory, external_db_url):
+
+def create_docker_compose(working_directory):
     docker_compose_content = f"""
-version: '3'
+version: '3.8'
 
 services:
   web:
-    build: .
-    container_name: {domain}_web
-    image: {domain}_image
-    restart: always
+    image: php:7.4-apache
+    container_name: php_apache_server
     ports:
-      - "{port}:8000"
+      - "80:80"
+    volumes:
+      - /home/data:/var/www/html
+      - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
+    environment:
+      APACHE_RUN_USER: www-data
+      APACHE_RUN_GROUP: www-data
+    command: ["apache2-foreground"]
+    working_dir: /var/www/html
+    restart: always
+
+    # Utiliser le Dockerfile pour l'installation des extensions et la configuration d'Apache
+    build:
+      context: .
+      dockerfile: Dockerfile
 """
-    with open(f"{working_directory}/docker-compose.yml", "w") as f:
+    with open(f"{working_directory}/docker-compose.yaml", "w") as f:
         f.write(docker_compose_content)
 
-
-
-def configure_nginx(domain_name, working_directory, port):
-    NGINX_CONF_TEMPLATE = """
-    server {{
-        server_name {domain_name} www.{domain_name};
-
-        location /static {{
-            alias {working_directory}/static;
-        }}
-
-        location / {{
-            proxy_set_header Host $http_host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_redirect off;
-            proxy_pass http://127.0.0.1:{port};
-        }}
-        gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;   
-        gzip on;
-    }}
-    """
-
-    print("\033[92m" + "Configuration de Nginx..." + "\033[0m")
-    
-    nginx_conf_file = os.path.join("/etc/nginx/sites-available", domain_name)
-    if os.path.exists(nginx_conf_file):
-        os.remove(nginx_conf_file)
-
-    link_file = os.path.join("/etc/nginx/sites-enabled", domain_name)
-    if os.path.exists(link_file):
-        os.remove(link_file)
-
-    nginx_conf = NGINX_CONF_TEMPLATE.format(domain_name=domain_name, working_directory=working_directory, port=port)
-    with open(f"/etc/nginx/sites-available/{domain_name}", "w") as f:
-        f.write(nginx_conf)
-
-    # Create symbolic link
-    print("\033[92m" + "Création lien symbolique..." + "\033[0m")
-    try:
-        subprocess.run(["sudo", "ln", "-sf", f"/etc/nginx/sites-available/{domain_name}", f"/etc/nginx/sites-enabled/{domain_name}"], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Erreur lors de la création du lien symbolique : {e}")
-        return
-
-    # Restart Nginx
-    print("\033[92m" + "Redémarrage de Nginx..." + "\033[0m")
-    try:
-        subprocess.run(["sudo", "systemctl", "restart", "nginx"], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Erreur lors du redémarrage de Nginx : {e}")
-        return
-
-def install_ssl(domain_name):
-    print("\033[92m" + "Installation SSL ..." + "\033[0m")
-    try:
-        subprocess.run(["sudo", "certbot", "--nginx", "-d", domain_name], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Erreur lors de l'installation des certificats SSL : {e}")
 
 if __name__ == "__main__":
     main()
