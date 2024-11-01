@@ -10,7 +10,6 @@ services:
       - "81:80"
     volumes:
       - ./:/var/www/html
-      - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
     networks:
       - app-network
 
