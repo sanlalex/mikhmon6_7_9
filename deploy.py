@@ -9,7 +9,7 @@ import sys
 # Configuration
 USER = "sanlalex"
 REPO = "mikhmon7_10_7_15"
-BRANCH = "main" #dev
+BRANCH = "dev" #dev
 GITHUB_TOKEN = "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"  
 
 def main():
